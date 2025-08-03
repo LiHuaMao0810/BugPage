@@ -28,7 +28,7 @@ class FocusReadingApp {
             bird: '🐦',
             fish: '🐠',
             butterfly: '🦋',
-            cockroach: '🪳', // 使用真正的蟑螂emoji
+            cockroach: '🪳',
             graduate: 'graduate.jpg' // 毕业生形象 - 尝试相对路径
         };
         
