@@ -191,10 +191,12 @@ main {
     font-size: 40px;
     z-index: 1000;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease, transform 0.5s ease;
     animation: float 3s ease-in-out infinite;
     user-select: none;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transform-origin: center center;
+    will-change: transform, left, top;
 }
 
 .character:hover {

@@ -27,8 +27,13 @@ class FocusReadingApp {
             cat: '🐱',
             bird: '🐦',
             fish: '🐠',
-            butterfly: '🦋'
+            butterfly: '🦋',
+            cockroach: '🪳'
         };
+        
+        // 角色当前位置
+        this.characterPosition = { x: 0, y: 0 };
+        this.lastPosition = { x: 0, y: 0 };
         
         this.initEventListeners();
         this.updateCharacterDisplay();
@@ -278,6 +283,10 @@ class FocusReadingApp {
         const x = Math.random() * (window.innerWidth - 100);
         const y = Math.random() * (window.innerHeight - 100);
         
+        // 记录初始位置
+        this.characterPosition = { x, y };
+        this.lastPosition = { x, y };
+        
         this.character.style.left = x + 'px';
         this.character.style.top = y + 'px';
         this.character.classList.remove('hidden');
@@ -290,6 +299,8 @@ class FocusReadingApp {
     hideCharacter() {
         this.character.classList.add('hidden');
         this.character.classList.remove('moving');
+        // 重置变换状态
+        this.character.style.transform = 'rotate(0deg)';
     }
     
     animateCharacterMovement() {
@@ -299,12 +310,22 @@ class FocusReadingApp {
                 return;
             }
             
-            const x = Math.random() * (window.innerWidth - 100);
-            const y = Math.random() * (window.innerHeight - 100);
+            // 记录当前位置作为上一个位置
+            this.lastPosition = { ...this.characterPosition };
+            
+            // 生成新的随机位置
+            const newX = Math.random() * (window.innerWidth - 100);
+            const newY = Math.random() * (window.innerHeight - 100);
+            
+            // 更新当前位置
+            this.characterPosition = { x: newX, y: newY };
+            
+            // 计算移动方向并调整朝向
+            this.updateCharacterDirection(this.lastPosition, this.characterPosition);
             
             this.character.style.transition = 'all 2s ease-in-out';
-            this.character.style.left = x + 'px';
-            this.character.style.top = y + 'px';
+            this.character.style.left = newX + 'px';
+            this.character.style.top = newY + 'px';
         }, 2000);
         
         // 10秒后停止移动
@@ -368,6 +389,35 @@ class FocusReadingApp {
     
     updateCharacterDisplay() {
         this.character.textContent = this.characterEmojis[this.characterType];
+    }
+    
+    updateCharacterDirection(fromPos, toPos) {
+        // 计算移动向量
+        const deltaX = toPos.x - fromPos.x;
+        const deltaY = toPos.y - fromPos.y;
+        
+        // 如果移动距离太小，不改变朝向
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (distance < 10) {
+            return;
+        }
+        
+        // 计算角度（弧度转角度）
+        // Math.atan2(deltaY, deltaX) 返回从X轴正方向到向量的角度
+        // 由于emoji默认"头部"向上，我们需要调整90度
+        let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+        
+        // 调整角度，使emoji的"头部"指向移动方向
+        // 默认emoji朝上（0度），向右移动需要顺时针旋转90度
+        angle = angle + 90;
+        
+        // 标准化角度到0-360度范围
+        if (angle < 0) {
+            angle += 360;
+        }
+        
+        // 应用旋转变换
+        this.character.style.transform = `rotate(${angle}deg)`;
     }
     
     updateStats() {
