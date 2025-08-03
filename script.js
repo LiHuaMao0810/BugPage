@@ -1,8 +1,502 @@
 // PDF.js 配置
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+// ============ 存储管理器 ============
+class StorageManager {
+    static keys = {
+        FOCUS_TARGET_DURATION: 'focusTargetDuration', // 专注目标时长
+        REMINDER_INTERVAL: 'reminderInterval', // 角色提醒间隔
+        MOVING_CHARACTER_AVATAR: 'movingCharacterAvatar', // 移动角色头像
+        COMPANION_AVATAR: 'companionAvatar', // 陪伴吉祥物头像
+        USER_SETTINGS: 'userSettings',
+        FIRST_VISIT: 'firstVisit'
+    };
+
+    static get(key) {
+        try {
+            const value = localStorage.getItem(key);
+            return value ? JSON.parse(value) : null;
+        } catch {
+            return localStorage.getItem(key);
+        }
+    }
+
+    static set(key, value) {
+        try {
+            localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        } catch (error) {
+            console.error('Storage error:', error);
+        }
+    }
+
+    static remove(key) {
+        localStorage.removeItem(key);
+    }
+
+    static isFirstVisit() {
+        return !this.get(this.keys.FIRST_VISIT);
+    }
+
+    static markVisited() {
+        this.set(this.keys.FIRST_VISIT, true);
+    }
+}
+
+// ============ 模态窗口管理器 ============
+class ModalManager {
+    static create(content, options = {}) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                ${content}
+            </div>
+        `;
+
+        if (options.closable !== false) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.close(modal);
+                }
+            });
+        }
+
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('show'), 10);
+        return modal;
+    }
+
+    static close(modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 300);
+    }
+
+    static createFocusTargetModal() {
+        const savedTarget = StorageManager.get(StorageManager.keys.FOCUS_TARGET_DURATION) || 1800; // 默认30分钟
+        
+        const content = `
+            <div class="focus-duration-modal">
+                <h2>🎯 设置专注目标</h2>
+                <p>您这次想要专注多长时间？达到目标后我们会为您庆祝！</p>
+                
+                <div class="duration-options">
+                    <div class="duration-grid">
+                        <button class="duration-btn ${savedTarget === 60 ? 'active' : ''}" data-duration="60">
+                            <span class="duration-time">1分钟</span>
+                            <span class="duration-desc">测试模式</span>
+                        </button>
+                        <button class="duration-btn ${savedTarget === 300 ? 'active' : ''}" data-duration="300">
+                            <span class="duration-time">5分钟</span>
+                            <span class="duration-desc">快速专注</span>
+                        </button>
+                        <button class="duration-btn ${savedTarget === 900 ? 'active' : ''}" data-duration="900">
+                            <span class="duration-time">15分钟</span>
+                            <span class="duration-desc">短时专注</span>
+                        </button>
+                        <button class="duration-btn ${savedTarget === 1800 ? 'active' : ''}" data-duration="1800">
+                            <span class="duration-time">30分钟</span>
+                            <span class="duration-desc">标准目标</span>
+                        </button>
+                        <button class="duration-btn ${savedTarget === 2700 ? 'active' : ''}" data-duration="2700">
+                            <span class="duration-time">45分钟</span>
+                            <span class="duration-desc">深度专注</span>
+                        </button>
+                        <button class="duration-btn ${savedTarget === 3600 ? 'active' : ''}" data-duration="3600">
+                            <span class="duration-time">60分钟</span>
+                            <span class="duration-desc">专注挑战</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="confirmTarget" class="btn btn-primary">开始专注之旅</button>
+                </div>
+            </div>
+        `;
+
+        return this.create(content, { closable: false });
+    }
+}
+
+// ============ 烟花动画管理器 ============
+class FireworksManager {
+    static show(duration = 3000) {
+        const fireworksContainer = document.createElement('div');
+        fireworksContainer.className = 'fireworks-container';
+        fireworksContainer.innerHTML = `
+            <div class="firework firework-1"></div>
+            <div class="firework firework-2"></div>
+            <div class="firework firework-3"></div>
+            <div class="congratulations">
+                <h2>🎉 恭喜完成专注！</h2>
+                <p>您的专注力正在不断提升！</p>
+            </div>
+        `;
+
+        document.body.appendChild(fireworksContainer);
+        
+        // 播放烟花音效（如果有的话）
+        this.playSound();
+
+        setTimeout(() => {
+            fireworksContainer.classList.add('show');
+        }, 100);
+
+        setTimeout(() => {
+            fireworksContainer.classList.remove('show');
+            setTimeout(() => {
+                if (fireworksContainer.parentNode) {
+                    fireworksContainer.parentNode.removeChild(fireworksContainer);
+                }
+            }, 500);
+        }, duration);
+    }
+
+    static playSound() {
+        // 创建音效（使用Web Audio API生成简单的庆祝声音）
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.1;
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (error) {
+            // 忽略音频错误
+        }
+    }
+}
+
+// ============ 陪伴吉祥物 ============
+class CompanionMascot {
+    constructor() {
+        this.container = null;
+        this.avatarKey = StorageManager.keys.COMPANION_AVATAR;
+        this.createMascot();
+        this.loadSavedAvatar();
+    }
+
+    createMascot() {
+        this.container = document.createElement('div');
+        this.container.className = 'companion-mascot';
+        this.container.innerHTML = `
+            <div class="mascot-avatar" id="companionAvatar">
+                🐾
+            </div>
+            <div class="mascot-controls">
+                <input type="file" id="companionAvatarInput" accept="image/*" style="display: none;">
+                <button id="uploadCompanionBtn" class="btn-mascot">📷</button>
+                <button id="removeCompanionBtn" class="btn-mascot btn-danger" style="display: none;">🗑️</button>
+            </div>
+        `;
+
+        // 添加到页面左下角
+        document.body.appendChild(this.container);
+
+        // 绑定事件
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        const uploadBtn = document.getElementById('uploadCompanionBtn');
+        const removeBtn = document.getElementById('removeCompanionBtn');
+        const fileInput = document.getElementById('companionAvatarInput');
+
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            this.handleImageUpload(e.target.files[0]);
+        });
+
+        removeBtn.addEventListener('click', () => {
+            this.removeAvatar();
+        });
+    }
+
+    handleImageUpload(file) {
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('请选择图片文件');
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            alert('图片大小不能超过2MB');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.compressAndSaveImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    compressAndSaveImage(imageData) {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const maxSize = 80;
+            let { width, height } = img;
+
+            if (width > height) {
+                if (width > maxSize) {
+                    height = height * (maxSize / width);
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = width * (maxSize / height);
+                    height = maxSize;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            StorageManager.set(this.avatarKey, compressedData);
+            this.updateDisplay();
+            this.showControls();
+        };
+        img.src = imageData;
+    }
+
+    loadSavedAvatar() {
+        const savedAvatar = StorageManager.get(this.avatarKey);
+        if (savedAvatar) {
+            this.updateDisplay();
+            this.showControls();
+        }
+    }
+
+    updateDisplay() {
+        const avatar = document.getElementById('companionAvatar');
+        const savedAvatar = StorageManager.get(this.avatarKey);
+
+        if (savedAvatar) {
+            avatar.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = savedAvatar;
+            img.style.cssText = `
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                object-fit: cover;
+            `;
+            avatar.appendChild(img);
+        } else {
+            avatar.textContent = '🐾';
+        }
+    }
+
+    showControls() {
+        const removeBtn = document.getElementById('removeCompanionBtn');
+        const savedAvatar = StorageManager.get(this.avatarKey);
+        removeBtn.style.display = savedAvatar ? 'block' : 'none';
+    }
+
+    removeAvatar() {
+        if (confirm('确定要删除陪伴吉祥物的头像吗？')) {
+            StorageManager.remove(this.avatarKey);
+            this.updateDisplay();
+            this.showControls();
+        }
+    }
+}
+
+// ============ 头像管理器 ============
+class AvatarManager {
+    constructor() {
+        this.storageKey = StorageManager.keys.MOVING_CHARACTER_AVATAR;
+        this.initFileUpload();
+        this.loadSavedAvatar();
+    }
+
+    initFileUpload() {
+        // 创建头像上传区域
+        const avatarSection = this.createAvatarSection();
+        const settingsDiv = document.querySelector('.settings');
+        settingsDiv.appendChild(avatarSection);
+    }
+
+    createAvatarSection() {
+        const section = document.createElement('div');
+        section.className = 'avatar-section';
+        section.innerHTML = `
+            <div class="avatar-controls">
+                <label>角色头像:</label>
+                <div class="avatar-upload-area">
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                    <button id="uploadAvatarBtn" class="btn btn-small">📷 上传</button>
+                    <button id="removeAvatarBtn" class="btn btn-small btn-danger" style="display: none;">🗑️ 删除</button>
+                </div>
+                <div class="avatar-preview" id="avatarPreview" style="display: none;">
+                    <img id="avatarPreviewImg" src="" alt="角色头像预览">
+                </div>
+            </div>
+        `;
+
+        // 绑定事件
+        section.querySelector('#uploadAvatarBtn').addEventListener('click', () => {
+            section.querySelector('#avatarInput').click();
+        });
+
+        section.querySelector('#avatarInput').addEventListener('change', (e) => {
+            this.handleImageUpload(e.target.files[0]);
+        });
+
+        section.querySelector('#removeAvatarBtn').addEventListener('click', () => {
+            this.removeAvatar();
+        });
+
+        return section;
+    }
+
+    handleImageUpload(file) {
+        if (!file) return;
+
+        // 验证文件
+        if (!file.type.startsWith('image/')) {
+            alert('请选择图片文件');
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            alert('图片大小不能超过2MB');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.compressAndSaveImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    compressAndSaveImage(imageData) {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // 设置目标尺寸
+            const maxSize = 120;
+            let { width, height } = img;
+
+            if (width > height) {
+                if (width > maxSize) {
+                    height = height * (maxSize / width);
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = width * (maxSize / height);
+                    height = maxSize;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // 保存到本地存储
+            StorageManager.set(this.storageKey, compressedData);
+            
+            // 更新界面
+            this.updateUI();
+            this.addCustomOption();
+            
+            alert('头像上传成功！');
+        };
+        img.src = imageData;
+    }
+
+    loadSavedAvatar() {
+        const savedAvatar = StorageManager.get(this.storageKey);
+        if (savedAvatar) {
+            this.addCustomOption();
+            this.updateUI();
+        }
+    }
+
+    updateUI() {
+        const preview = document.getElementById('avatarPreview');
+        const previewImg = document.getElementById('avatarPreviewImg');
+        const removeBtn = document.getElementById('removeAvatarBtn');
+        const savedAvatar = StorageManager.get(this.storageKey);
+
+        if (savedAvatar) {
+            previewImg.src = savedAvatar;
+            preview.style.display = 'block';
+            removeBtn.style.display = 'inline-block';
+        } else {
+            preview.style.display = 'none';
+            removeBtn.style.display = 'none';
+        }
+    }
+
+    addCustomOption() {
+        const characterSelect = document.getElementById('character');
+        if (!document.querySelector('option[value="custom"]')) {
+            const customOption = document.createElement('option');
+            customOption.value = 'custom';
+            customOption.textContent = '🖼️ 自定义头像';
+            characterSelect.appendChild(customOption);
+        }
+    }
+
+    removeAvatar() {
+        if (confirm('确定要删除自定义头像吗？')) {
+            StorageManager.remove(this.storageKey);
+            
+            // 移除选项
+            const customOption = document.querySelector('option[value="custom"]');
+            if (customOption) {
+                customOption.remove();
+            }
+            
+            // 更新界面
+            this.updateUI();
+            
+            // 如果当前选中的是自定义头像，切换到默认
+            if (window.app && window.app.characterType === 'custom') {
+                window.app.characterType = 'bug';
+                window.app.updateCharacterDisplay();
+                document.getElementById('character').value = 'bug';
+            }
+        }
+    }
+
+    getCustomAvatar() {
+        return StorageManager.get(this.storageKey);
+    }
+}
+
+// ============ 主应用类 ============
 class FocusReadingApp {
     constructor() {
+        // PDF相关
         this.pdfDoc = null;
         this.pageNum = 1;
         this.pageRendering = false;
@@ -14,10 +508,14 @@ class FocusReadingApp {
         // 专注模式相关
         this.focusMode = false;
         this.focusTimer = null;
-        this.focusInterval = 30; // 默认30秒
+        this.reminderInterval = StorageManager.get(StorageManager.keys.REMINDER_INTERVAL) || 120; // 默认2分钟提醒
+        this.focusTargetDuration = StorageManager.get(StorageManager.keys.FOCUS_TARGET_DURATION) || 1800; // 默认30分钟目标
         this.focusCount = 0;
         this.startTime = null;
         this.readingTimeInterval = null;
+        this.targetReachedTimer = null; // 专注目标达成计时器
+        this.totalFocusTime = 0; // 累计专注时间
+        this.targetReached = false; // 是否已达成目标
         
         // 角色相关
         this.character = document.getElementById('focusCharacter');
@@ -29,15 +527,74 @@ class FocusReadingApp {
             fish: '🐠',
             butterfly: '🦋',
             cockroach: '🪳',
-            graduate: 'graduate.jpg' // 毕业生形象 - 尝试相对路径
+            graduate: 'graduate.jpg'
         };
         
-        // 角色当前位置
+        // 角色位置
         this.characterPosition = { x: 0, y: 0 };
         this.lastPosition = { x: 0, y: 0 };
         
+        // 初始化组件
+        this.avatarManager = new AvatarManager();
+        this.companionMascot = new CompanionMascot();
+        
         this.initEventListeners();
         this.updateCharacterDisplay();
+        this.updateSettingsDisplay();
+        
+        // 检查是否首次访问
+        if (StorageManager.isFirstVisit()) {
+            this.showWelcomeModal();
+        }
+    }
+
+    showWelcomeModal() {
+        const modal = ModalManager.createFocusTargetModal();
+        
+        // 处理目标时长选择
+        modal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('duration-btn')) {
+                // 移除其他按钮的active状态
+                modal.querySelectorAll('.duration-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // 添加当前按钮的active状态
+                e.target.classList.add('active');
+                
+                // 保存选择的目标时长
+                const targetDuration = parseInt(e.target.dataset.duration);
+                this.focusTargetDuration = targetDuration;
+                StorageManager.set(StorageManager.keys.FOCUS_TARGET_DURATION, targetDuration);
+                this.updateSettingsDisplay();
+            }
+            
+            if (e.target.id === 'confirmTarget') {
+                StorageManager.markVisited();
+                ModalManager.close(modal);
+            }
+        });
+    }
+
+    updateSettingsDisplay() {
+        const intervalInput = document.getElementById('interval');
+        if (intervalInput) {
+            intervalInput.value = this.reminderInterval;
+        }
+        
+        // 更新目标时长显示（如果有UI元素的话）
+        this.updateTargetDisplay();
+    }
+    
+    updateTargetDisplay() {
+        // 格式化目标时长显示
+        const minutes = Math.floor(this.focusTargetDuration / 60);
+        const targetText = minutes >= 60 ? 
+            `${Math.floor(minutes / 60)}小时${minutes % 60 > 0 ? minutes % 60 + '分钟' : ''}` :
+            `${minutes}分钟`;
+        
+        // 可以在UI中显示当前目标（如果需要的话）
+        console.log(`当前专注目标: ${targetText}`);
     }
     
     initEventListeners() {
@@ -78,7 +635,8 @@ class FocusReadingApp {
         });
         
         document.getElementById('interval').addEventListener('change', (e) => {
-            this.focusInterval = parseInt(e.target.value);
+            this.reminderInterval = parseInt(e.target.value);
+            StorageManager.set(StorageManager.keys.REMINDER_INTERVAL, this.reminderInterval);
             if (this.focusMode) {
                 this.restartFocusTimer();
             }
@@ -237,6 +795,7 @@ class FocusReadingApp {
     startFocusMode() {
         this.startTime = Date.now();
         this.focusCount = 0;
+        this.targetReached = false;
         this.updateStats();
         
         // 开始阅读时间计时
@@ -246,6 +805,11 @@ class FocusReadingApp {
         
         // 开始专注提醒计时
         this.startFocusTimer();
+        
+        // 设置专注目标达成计时器
+        this.targetReachedTimer = setTimeout(() => {
+            this.onTargetReached();
+        }, this.focusTargetDuration * 1000);
     }
     
     stopFocusMode() {
@@ -259,7 +823,65 @@ class FocusReadingApp {
             this.readingTimeInterval = null;
         }
         
+        if (this.targetReachedTimer) {
+            clearTimeout(this.targetReachedTimer);
+            this.targetReachedTimer = null;
+        }
+        
+        // 计算本次专注时长
+        if (this.startTime) {
+            const sessionTime = Math.floor((Date.now() - this.startTime) / 1000);
+            this.totalFocusTime += sessionTime;
+            
+            // 如果没有达成目标但专注超过1分钟，显示鼓励
+            if (!this.targetReached && sessionTime >= 60) {
+                this.showEncouragement(sessionTime);
+            }
+        }
+        
         this.hideCharacter();
+    }
+    
+    onTargetReached() {
+        if (!this.focusMode) return;
+        
+        this.targetReached = true;
+        
+        // 显示目标达成庆祝
+        FireworksManager.show(5000); // 显示5秒烟花
+        
+        // 显示特殊祝贺消息
+        this.showTargetReachedMessage();
+        
+        // 自动停止专注模式
+        setTimeout(() => {
+            if (this.focusMode) {
+                this.toggleFocusMode();
+            }
+        }, 2000);
+    }
+    
+    showTargetReachedMessage() {
+        const minutes = Math.floor(this.focusTargetDuration / 60);
+        const targetText = minutes >= 60 ? 
+            `${Math.floor(minutes / 60)}小时${minutes % 60 > 0 ? minutes % 60 + '分钟' : ''}` :
+            `${minutes}分钟`;
+            
+        this.showSuccessMessage(`🎉 恭喜！您已完成${targetText}的专注目标！`);
+    }
+    
+    showEncouragement(sessionTime) {
+        const minutes = Math.floor(sessionTime / 60);
+        const seconds = sessionTime % 60;
+        let timeText = '';
+        
+        if (minutes > 0) {
+            timeText = `${minutes}分钟${seconds > 0 ? seconds + '秒' : ''}`;
+        } else {
+            timeText = `${seconds}秒`;
+        }
+        
+        this.showSuccessMessage(`💪 您已专注了${timeText}，继续努力！`);
     }
     
     startFocusTimer() {
@@ -269,7 +891,7 @@ class FocusReadingApp {
         
         this.focusTimer = setTimeout(() => {
             this.showCharacter();
-        }, this.focusInterval * 1000);
+        }, this.reminderInterval * 1000);
     }
     
     restartFocusTimer() {
@@ -387,20 +1009,31 @@ class FocusReadingApp {
     }
     
     updateCharacterDisplay() {
-        const characterValue = this.characterEmojis[this.characterType];
+        let characterValue = this.characterEmojis[this.characterType];
+        
+        // 如果是自定义头像，从存储中获取
+        if (this.characterType === 'custom') {
+            characterValue = this.avatarManager.getCustomAvatar() || '🖼️';
+        }
         
         // 清空之前的内容
         this.character.innerHTML = '';
         
-        // 判断是emoji还是图片路径
-        if (characterValue.includes('.jpg') || characterValue.includes('.png') || characterValue.includes('.gif')) {
+        // 判断是emoji还是图片
+        if (typeof characterValue === 'string' && 
+            (characterValue.startsWith('data:') || characterValue.includes('.jpg') || 
+             characterValue.includes('.png') || characterValue.includes('.gif'))) {
             // 创建图片元素
             const img = document.createElement('img');
             img.src = characterValue;
-            img.style.width = '60px';
-            img.style.height = '60px';
-            img.style.borderRadius = '50%';
-            img.style.objectFit = 'cover';
+            img.style.cssText = `
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #fff;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            `;
             this.character.appendChild(img);
         } else {
             // 显示emoji
@@ -470,13 +1103,12 @@ class FocusReadingApp {
 
 // 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
-    new FocusReadingApp();
+    window.app = new FocusReadingApp();
 });
 
 // 防止页面刷新时丢失专注模式状态
 window.addEventListener('beforeunload', (e) => {
-    const app = window.focusApp;
-    if (app && app.focusMode) {
+    if (window.app && window.app.focusMode) {
         e.preventDefault();
         e.returnValue = '您正在专注模式中，确定要离开吗？';
         return e.returnValue;

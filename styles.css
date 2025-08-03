@@ -347,3 +347,452 @@ main {
 .focus-mode-active .character {
     animation-duration: 6s;
 }
+
+/* ============ 新功能样式 ============ */
+
+/* 模态窗口样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.show .modal-content {
+    transform: translateY(0);
+}
+
+/* 专注时长选择模态窗口 */
+.focus-duration-modal h2 {
+    text-align: center;
+    color: #4a5568;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+.focus-duration-modal p {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+.duration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.duration-btn {
+    background: linear-gradient(135deg, #f7fafc, #e2e8f0);
+    border: 2px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 15px 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 80px;
+}
+
+.duration-btn:hover {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.duration-btn.active {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    border-color: #38a169;
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+}
+
+.duration-time {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.duration-desc {
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.modal-actions {
+    text-align: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* 烟花动画样式 */
+.fireworks-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.fireworks-container.show {
+    opacity: 1;
+}
+
+.firework {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    animation: firework 2s ease-out infinite;
+}
+
+.firework-1 {
+    top: 60%;
+    left: 20%;
+    background: #ff6b6b;
+    animation-delay: 0s;
+}
+
+.firework-2 {
+    top: 50%;
+    left: 50%;
+    background: #4ecdc4;
+    animation-delay: 0.5s;
+}
+
+.firework-3 {
+    top: 70%;
+    left: 80%;
+    background: #45b7d1;
+    animation-delay: 1s;
+}
+
+@keyframes firework {
+    0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 1;
+    }
+    15% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    30% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) scale(0);
+        opacity: 0;
+        box-shadow: 
+            0 0 50px currentColor,
+            10px 10px 30px currentColor,
+            -10px -10px 30px currentColor,
+            10px -10px 30px currentColor,
+            -10px 10px 30px currentColor;
+    }
+}
+
+.congratulations {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    animation: celebration 3s ease-out;
+}
+
+.congratulations h2 {
+    color: #4a5568;
+    margin-bottom: 10px;
+    font-size: 2em;
+}
+
+.congratulations p {
+    color: #666;
+    font-size: 1.2em;
+}
+
+@keyframes celebration {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    20% {
+        transform: translate(-50%, -50%) scale(1.1) rotate(5deg);
+        opacity: 1;
+    }
+    40% {
+        transform: translate(-50%, -50%) scale(0.95) rotate(-3deg);
+    }
+    60% {
+        transform: translate(-50%, -50%) scale(1.02) rotate(2deg);
+    }
+    80% {
+        transform: translate(-50%, -50%) scale(0.98) rotate(-1deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* 头像相关样式 */
+.avatar-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.avatar-controls label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.9em;
+}
+
+.avatar-upload-area {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-small {
+    padding: 8px 15px;
+    font-size: 0.85em;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-small:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #e53e3e, #c53030) !important;
+}
+
+.btn-danger:hover {
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3) !important;
+}
+
+.avatar-preview {
+    margin-top: 10px;
+}
+
+.avatar-preview img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式设计改进 */
+@media (max-width: 768px) {
+    .avatar-section {
+        margin-left: 0;
+        margin-top: 15px;
+        padding-left: 0;
+        border-left: none;
+        border-top: 2px solid #e2e8f0;
+        padding-top: 15px;
+    }
+    
+    .modal-content {
+        padding: 20px;
+        margin: 20px;
+    }
+    
+    .duration-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .congratulations {
+        margin: 20px;
+        padding: 20px;
+    }
+    
+    .congratulations h2 {
+        font-size: 1.5em;
+    }
+    
+    .congratulations p {
+        font-size: 1em;
+    }
+}
+
+/* 陪伴吉祥物样式 */
+.companion-mascot {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.companion-mascot:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.mascot-avatar {
+    font-size: 3em;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+}
+
+.mascot-avatar:hover {
+    transform: scale(1.1);
+}
+
+.mascot-controls {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.companion-mascot:hover .mascot-controls {
+    opacity: 1;
+}
+
+.btn-mascot {
+    padding: 6px 10px;
+    font-size: 0.8em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-mascot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-mascot.btn-danger {
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+}
+
+.btn-mascot.btn-danger:hover {
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+}
+
+/* 角色头像区域调整 */
+.avatar-section {
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 2px solid #e2e8f0;
+}
+
+/* 增强点击效果动画 */
+@keyframes fadeUpOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-15px) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.8);
+    }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .companion-mascot {
+        bottom: 10px;
+        left: 10px;
+        padding: 10px;
+    }
+    
+    .mascot-avatar {
+        font-size: 2.5em;
+        width: 60px;
+        height: 60px;
+    }
+    
+    .btn-mascot {
+        padding: 4px 8px;
+        font-size: 0.7em;
+    }
+}
