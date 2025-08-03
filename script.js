@@ -28,7 +28,8 @@ class FocusReadingApp {
             bird: '🐦',
             fish: '🐠',
             butterfly: '🦋',
-            cockroach: '🪳'
+            cockroach: '🐜', // 使用蚂蚁emoji作为替代，兼容性更好
+            graduate: 'f4dda806ee90f0b59d1f7565e94ea96.jpg' // 毕业生形象
         };
         
         // 角色当前位置
@@ -386,7 +387,25 @@ class FocusReadingApp {
     }
     
     updateCharacterDisplay() {
-        this.character.textContent = this.characterEmojis[this.characterType];
+        const characterValue = this.characterEmojis[this.characterType];
+        
+        // 清空之前的内容
+        this.character.innerHTML = '';
+        
+        // 判断是emoji还是图片路径
+        if (characterValue.includes('.jpg') || characterValue.includes('.png') || characterValue.includes('.gif')) {
+            // 创建图片元素
+            const img = document.createElement('img');
+            img.src = characterValue;
+            img.style.width = '40px';
+            img.style.height = '40px';
+            img.style.borderRadius = '50%';
+            img.style.objectFit = 'cover';
+            this.character.appendChild(img);
+        } else {
+            // 显示emoji
+            this.character.textContent = characterValue;
+        }
     }
     
     updateCharacterDirection(fromPos, toPos) {
