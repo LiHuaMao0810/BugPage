@@ -397,8 +397,8 @@ class FocusReadingApp {
             // 创建图片元素
             const img = document.createElement('img');
             img.src = characterValue;
-            img.style.width = '40px';
-            img.style.height = '40px';
+            img.style.width = '60px';
+            img.style.height = '60px';
             img.style.borderRadius = '50%';
             img.style.objectFit = 'cover';
             this.character.appendChild(img);
