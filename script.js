@@ -29,7 +29,7 @@ class FocusReadingApp {
             fish: '🐠',
             butterfly: '🦋',
             cockroach: '🐜', // 使用蚂蚁emoji作为替代，兼容性更好
-            graduate: 'f4dda806ee90f0b59d1f7565e94ea96.jpg' // 毕业生形象
+            graduate: './f4dda806ee90f0b59d1f7565e94ea96.jpg' // 毕业生形象
         };
         
         // 角色当前位置
