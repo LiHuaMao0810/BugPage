@@ -332,46 +332,76 @@ class AvatarManager {
     }
 
     initFileUpload() {
-        // 创建头像上传区域
-        const avatarSection = this.createAvatarSection();
-        const settingsDiv = document.querySelector('.settings');
-        settingsDiv.appendChild(avatarSection);
+        // 绑定自定义角色按钮事件
+        const customizeBtn = document.getElementById('customizeCharacterBtn');
+        if (customizeBtn) {
+            customizeBtn.addEventListener('click', () => {
+                this.showCustomizeModal();
+            });
+        }
     }
 
-    createAvatarSection() {
-        const section = document.createElement('div');
-        section.className = 'avatar-section';
-        section.innerHTML = `
-            <div class="avatar-controls">
-                <label>角色头像:</label>
-                <div class="avatar-upload-area">
-                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
-                    <button id="uploadAvatarBtn" class="btn btn-small">📷 上传</button>
-                    <button id="removeAvatarBtn" class="btn btn-small btn-danger" style="display: none;">🗑️ 删除</button>
+    showCustomizeModal() {
+        const savedAvatar = this.getCustomAvatar();
+        
+        const content = `
+            <div class="customize-character-modal">
+                <h2>🎨 自定义角色头像</h2>
+                <p>上传您喜欢的图片作为移动角色的头像</p>
+                
+                <div class="avatar-upload-zone">
+                    <input type="file" id="modalAvatarInput" accept="image/*" style="display: none;">
+                    
+                    <div class="avatar-display">
+                        <div class="current-avatar" id="modalAvatarPreview">
+                            ${savedAvatar ? 
+                                `<img src="${savedAvatar}" alt="当前头像">` : 
+                                '<div class="placeholder">🖼️</div>'
+                            }
+                        </div>
+                        <div class="avatar-info">
+                            <p>当前头像</p>
+                            <small>建议尺寸: 100x100px，最大2MB</small>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-actions">
+                        <button id="modalUploadBtn" class="btn btn-primary">📷 选择图片</button>
+                        ${savedAvatar ? '<button id="modalRemoveBtn" class="btn btn-danger">🗑️ 移除头像</button>' : ''}
+                    </div>
                 </div>
-                <div class="avatar-preview" id="avatarPreview" style="display: none;">
-                    <img id="avatarPreviewImg" src="" alt="角色头像预览">
+                
+                <div class="modal-actions">
+                    <button id="modalCloseBtn" class="btn btn-secondary">完成</button>
                 </div>
             </div>
         `;
 
+        const modal = ModalManager.create(content);
+        
         // 绑定事件
-        section.querySelector('#uploadAvatarBtn').addEventListener('click', () => {
-            section.querySelector('#avatarInput').click();
+        modal.querySelector('#modalUploadBtn').addEventListener('click', () => {
+            modal.querySelector('#modalAvatarInput').click();
         });
 
-        section.querySelector('#avatarInput').addEventListener('change', (e) => {
-            this.handleImageUpload(e.target.files[0]);
+        modal.querySelector('#modalAvatarInput').addEventListener('change', (e) => {
+            this.handleImageUpload(e.target.files[0], modal);
         });
 
-        section.querySelector('#removeAvatarBtn').addEventListener('click', () => {
-            this.removeAvatar();
-        });
+        const removeBtn = modal.querySelector('#modalRemoveBtn');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                this.removeAvatar();
+                ModalManager.close(modal);
+            });
+        }
 
-        return section;
+        modal.querySelector('#modalCloseBtn').addEventListener('click', () => {
+            ModalManager.close(modal);
+        });
     }
 
-    handleImageUpload(file) {
+    handleImageUpload(file, modal = null) {
         if (!file) return;
 
         // 验证文件
@@ -387,12 +417,12 @@ class AvatarManager {
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            this.compressAndSaveImage(e.target.result);
+            this.compressAndSaveImage(e.target.result, modal);
         };
         reader.readAsDataURL(file);
     }
 
-    compressAndSaveImage(imageData) {
+    compressAndSaveImage(imageData, modal = null) {
         const img = new Image();
         img.onload = () => {
             const canvas = document.createElement('canvas');
@@ -424,8 +454,18 @@ class AvatarManager {
             StorageManager.set(this.storageKey, compressedData);
             
             // 更新界面
-            this.updateUI();
             this.addCustomOption();
+            
+            // 如果在模态窗口中，更新预览
+            if (modal) {
+                this.updateModalPreview(modal, compressedData);
+                this.updateModalActions(modal, true);
+            }
+            
+            // 更新角色显示
+            if (window.app) {
+                window.app.updateCharacterDisplay();
+            }
             
             alert('头像上传成功！');
         };
@@ -436,23 +476,31 @@ class AvatarManager {
         const savedAvatar = StorageManager.get(this.storageKey);
         if (savedAvatar) {
             this.addCustomOption();
-            this.updateUI();
         }
     }
 
-    updateUI() {
-        const preview = document.getElementById('avatarPreview');
-        const previewImg = document.getElementById('avatarPreviewImg');
-        const removeBtn = document.getElementById('removeAvatarBtn');
-        const savedAvatar = StorageManager.get(this.storageKey);
+    updateModalPreview(modal, imageData) {
+        const preview = modal.querySelector('#modalAvatarPreview');
+        if (preview) {
+            preview.innerHTML = `<img src="${imageData}" alt="当前头像">`;
+        }
+    }
 
-        if (savedAvatar) {
-            previewImg.src = savedAvatar;
-            preview.style.display = 'block';
-            removeBtn.style.display = 'inline-block';
-        } else {
-            preview.style.display = 'none';
-            removeBtn.style.display = 'none';
+    updateModalActions(modal, hasAvatar) {
+        const actions = modal.querySelector('.upload-actions');
+        if (hasAvatar) {
+            // 如果没有删除按钮，添加一个
+            if (!actions.querySelector('#modalRemoveBtn')) {
+                const removeBtn = document.createElement('button');
+                removeBtn.id = 'modalRemoveBtn';
+                removeBtn.className = 'btn btn-danger';
+                removeBtn.textContent = '🗑️ 移除头像';
+                removeBtn.addEventListener('click', () => {
+                    this.removeAvatar();
+                    ModalManager.close(modal);
+                });
+                actions.appendChild(removeBtn);
+            }
         }
     }
 
@@ -475,9 +523,6 @@ class AvatarManager {
             if (customOption) {
                 customOption.remove();
             }
-            
-            // 更新界面
-            this.updateUI();
             
             // 如果当前选中的是自定义头像，切换到默认
             if (window.app && window.app.characterType === 'custom') {
@@ -582,7 +627,12 @@ class FocusReadingApp {
             intervalInput.value = this.reminderInterval;
         }
         
-        // 更新目标时长显示（如果有UI元素的话）
+        const focusTargetSelect = document.getElementById('focusTarget');
+        if (focusTargetSelect) {
+            focusTargetSelect.value = this.focusTargetDuration;
+        }
+        
+        // 更新目标时长显示
         this.updateTargetDisplay();
     }
     
@@ -640,6 +690,12 @@ class FocusReadingApp {
             if (this.focusMode) {
                 this.restartFocusTimer();
             }
+        });
+        
+        document.getElementById('focusTarget').addEventListener('change', (e) => {
+            this.focusTargetDuration = parseInt(e.target.value);
+            StorageManager.set(StorageManager.keys.FOCUS_TARGET_DURATION, this.focusTargetDuration);
+            this.updateTargetDisplay();
         });
         
         document.getElementById('character').addEventListener('change', (e) => {

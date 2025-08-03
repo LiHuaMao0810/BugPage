@@ -15,18 +15,37 @@
                 <input type="file" id="pdfInput" accept=".pdf" style="display: none;">
                 <button id="uploadBtn" class="btn">上传PDF</button>
                 <div class="settings">
-                    <label for="interval">角色提醒间隔(秒):</label>
-                    <input type="number" id="interval" value="120" min="10" max="600">
-                    <label for="character">选择角色:</label>
-                    <select id="character">
-                        <option value="bug">🐛 小虫子</option>
-                        <option value="cat">🐱 小猫</option>
-                        <option value="bird">🐦 小鸟</option>
-                        <option value="fish">🐠 小鱼</option>
-                        <option value="butterfly">🦋 蝴蝶</option>
-                        <option value="cockroach">🪳 蟑螂</option>
-                        <option value="graduate">🎓 导师</option>
-                    </select>
+                    <div class="setting-group">
+                        <label for="focusTarget">专注目标(分钟):</label>
+                        <select id="focusTarget">
+                            <option value="60">1分钟</option>
+                            <option value="300">5分钟</option>
+                            <option value="900">15分钟</option>
+                            <option value="1800" selected>30分钟</option>
+                            <option value="2700">45分钟</option>
+                            <option value="3600">60分钟</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="interval">提醒间隔(秒):</label>
+                        <input type="number" id="interval" value="120" min="10" max="600">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="character">选择角色:</label>
+                        <select id="character">
+                            <option value="bug">🐛 小虫子</option>
+                            <option value="cat">🐱 小猫</option>
+                            <option value="bird">🐦 小鸟</option>
+                            <option value="fish">🐠 小鱼</option>
+                            <option value="butterfly">🦋 蝴蝶</option>
+                            <option value="cockroach">🪳 蟑螂</option>
+                            <option value="graduate">🎓 导师</option>
+                        </select>
+                        <button id="customizeCharacterBtn" class="btn-icon" title="自定义角色头像">⚙️</button>
+                    </div>
+                    
                     <button id="toggleBtn" class="btn">开始专注模式</button>
                 </div>
             </div>

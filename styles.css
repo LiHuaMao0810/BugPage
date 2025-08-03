@@ -46,9 +46,44 @@ header h1 {
 
 .settings {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     align-items: center;
     flex-wrap: wrap;
+}
+
+.setting-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 12px;
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.setting-group label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.btn-icon {
+    padding: 6px 8px;
+    font-size: 0.9em;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.2);
+    color: #4a5568;
+    transition: all 0.3s ease;
+    margin-left: 5px;
+}
+
+.btn-icon:hover {
+    background: rgba(102, 126, 234, 0.8);
+    color: white;
+    transform: translateY(-1px);
 }
 
 .btn {
@@ -589,71 +624,127 @@ main {
     }
 }
 
-/* 头像相关样式 */
-.avatar-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+/* 自定义角色模态窗口样式 */
+.customize-character-modal h2 {
+    text-align: center;
+    color: #4a5568;
+    margin-bottom: 10px;
+    font-size: 1.6em;
 }
 
-.avatar-controls label {
+.customize-character-modal p {
+    text-align: center;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.avatar-upload-zone {
+    margin-bottom: 25px;
+}
+
+.avatar-display {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: rgba(247, 250, 252, 0.8);
+    border-radius: 15px;
+    border: 2px dashed #e2e8f0;
+}
+
+.current-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.current-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.current-avatar .placeholder {
+    font-size: 2em;
+    color: #cbd5e0;
+}
+
+.avatar-info p {
     font-weight: 600;
     color: #4a5568;
-    font-size: 0.9em;
+    margin: 0 0 5px 0;
 }
 
-.avatar-upload-area {
+.avatar-info small {
+    color: #718096;
+    font-size: 0.85em;
+}
+
+.upload-actions {
     display: flex;
     gap: 10px;
-    align-items: center;
+    justify-content: center;
 }
 
-.btn-small {
-    padding: 8px 15px;
-    font-size: 0.85em;
-    border-radius: 8px;
+.btn-secondary {
+    background: linear-gradient(135deg, #718096, #4a5568);
+    color: white;
+    padding: 10px 20px;
     border: none;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
 }
 
-.btn-small:hover {
+.btn-secondary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(113, 128, 150, 0.3);
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #e53e3e, #c53030) !important;
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .btn-danger:hover {
-    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3) !important;
-}
-
-.avatar-preview {
-    margin-top: 10px;
-}
-
-.avatar-preview img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
 }
 
 /* 响应式设计改进 */
 @media (max-width: 768px) {
-    .avatar-section {
-        margin-left: 0;
-        margin-top: 15px;
-        padding-left: 0;
-        border-left: none;
-        border-top: 2px solid #e2e8f0;
-        padding-top: 15px;
+    .settings {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .setting-group {
+        justify-content: space-between;
+        padding: 10px 15px;
+    }
+    
+    .avatar-display {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .upload-actions {
+        flex-direction: column;
+        gap: 8px;
     }
     
     .modal-content {
