@@ -290,7 +290,6 @@ class FocusReadingApp {
         this.character.style.left = x + 'px';
         this.character.style.top = y + 'px';
         this.character.classList.remove('hidden');
-        this.character.classList.add('moving');
         
         // 随机移动轨迹
         this.animateCharacterMovement();
@@ -298,7 +297,6 @@ class FocusReadingApp {
     
     hideCharacter() {
         this.character.classList.add('hidden');
-        this.character.classList.remove('moving');
         // 重置变换状态
         this.character.style.transform = 'rotate(0deg)';
     }

@@ -210,40 +210,20 @@ main {
 
 @keyframes float {
     0%, 100% {
-        transform: translateY(0px) rotate(0deg);
+        margin-top: 0px;
     }
     25% {
-        transform: translateY(-10px) rotate(5deg);
+        margin-top: -10px;
     }
     50% {
-        transform: translateY(-5px) rotate(0deg);
+        margin-top: -5px;
     }
     75% {
-        transform: translateY(-15px) rotate(-5deg);
+        margin-top: -15px;
     }
 }
 
-@keyframes moveRandom {
-    0% {
-        transform: translate(0, 0);
-    }
-    25% {
-        transform: translate(100px, -50px);
-    }
-    50% {
-        transform: translate(-80px, 100px);
-    }
-    75% {
-        transform: translate(120px, 80px);
-    }
-    100% {
-        transform: translate(0, 0);
-    }
-}
-
-.character.moving {
-    animation: moveRandom 8s linear infinite, float 3s ease-in-out infinite;
-}
+/* 移除moveRandom动画，改为JavaScript控制移动 */
 
 /* 统计信息样式 */
 .stats {
