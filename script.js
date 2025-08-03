@@ -1,6 +1,46 @@
 // PDF.js 配置
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+// 调试模式检测
+const DEBUG_MODE = new URLSearchParams(window.location.search).has('debug');
+
+// 调试日志函数
+function debugLog(message, data = null) {
+    if (DEBUG_MODE) {
+        console.log(`[DEBUG] ${message}`, data || '');
+        
+        // 在页面上显示调试信息
+        const debugDiv = document.getElementById('debug-info') || createDebugDiv();
+        const timestamp = new Date().toLocaleTimeString();
+        debugDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        debugDiv.scrollTop = debugDiv.scrollHeight;
+    }
+}
+
+// 创建调试信息显示区域
+function createDebugDiv() {
+    const debugDiv = document.createElement('div');
+    debugDiv.id = 'debug-info';
+    debugDiv.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        width: 300px;
+        max-height: 200px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        overflow-y: auto;
+        z-index: 10001;
+    `;
+    document.body.appendChild(debugDiv);
+    debugDiv.innerHTML = '<div><strong>调试模式已启用</strong></div>';
+    return debugDiv;
+}
+
 // ============ 存储管理器 ============
 class StorageManager {
     static keys = {
@@ -26,11 +66,23 @@ class StorageManager {
             localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
         } catch (error) {
             console.error('Storage error:', error);
+            
+            // 如果是配额超限，显示用户友好的错误信息
+            if (error.name === 'QuotaExceededError') {
+                alert('存储空间不足，请清理一些浏览器数据后重试。');
+            } else {
+                alert('保存设置失败，请检查浏览器设置是否允许本地存储。');
+            }
+            throw error;
         }
     }
 
     static remove(key) {
-        localStorage.removeItem(key);
+        try {
+            localStorage.removeItem(key);
+        } catch (error) {
+            console.error('Storage remove error:', error);
+        }
     }
 
     static isFirstVisit() {
@@ -273,9 +325,15 @@ class CompanionMascot {
 
             const compressedData = canvas.toDataURL('image/jpeg', 0.8);
             
-            StorageManager.set(this.avatarKey, compressedData);
-            this.updateDisplay();
-            this.showControls();
+            try {
+                StorageManager.set(this.avatarKey, compressedData);
+                this.updateDisplay();
+                this.showControls();
+                alert('陪伴吉祥物头像上传成功！');
+            } catch (storageError) {
+                console.error('陪伴吉祥物头像保存失败:', storageError);
+                alert('头像保存失败：' + storageError.message);
+            }
         };
         img.src = imageData;
     }
@@ -404,29 +462,48 @@ class AvatarManager {
     handleImageUpload(file, modal = null) {
         if (!file) return;
 
+        debugLog(`开始处理图片上传: ${file.name}, 大小: ${file.size} bytes, 类型: ${file.type}`);
+
         // 验证文件
         if (!file.type.startsWith('image/')) {
+            debugLog('文件类型验证失败: 不是图片文件');
             alert('请选择图片文件');
             return;
         }
 
         if (file.size > 2 * 1024 * 1024) {
+            debugLog('文件大小验证失败: 超过2MB限制');
             alert('图片大小不能超过2MB');
             return;
         }
 
+        debugLog('文件验证通过，开始读取文件');
         const reader = new FileReader();
         reader.onload = (e) => {
+            debugLog(`文件读取完成，数据长度: ${e.target.result.length}`);
             this.compressAndSaveImage(e.target.result, modal);
+        };
+        reader.onerror = (e) => {
+            debugLog('文件读取失败', e);
+            alert('文件读取失败');
         };
         reader.readAsDataURL(file);
     }
 
     compressAndSaveImage(imageData, modal = null) {
+        debugLog('开始压缩图片');
         const img = new Image();
         img.onload = () => {
+            debugLog(`原图尺寸: ${img.width}x${img.height}`);
+            
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+                debugLog('Canvas上下文获取失败');
+                alert('浏览器不支持Canvas功能');
+                return;
+            }
 
             // 设置目标尺寸
             const maxSize = 120;
@@ -444,31 +521,51 @@ class AvatarManager {
                 }
             }
 
+            debugLog(`压缩后尺寸: ${width}x${height}`);
             canvas.width = width;
             canvas.height = height;
             ctx.drawImage(img, 0, 0, width, height);
 
             const compressedData = canvas.toDataURL('image/jpeg', 0.8);
+            debugLog(`压缩完成，数据长度: ${compressedData.length}`);
             
-            // 保存到本地存储
-            StorageManager.set(this.storageKey, compressedData);
-            
-            // 更新界面
-            this.addCustomOption();
-            
-            // 如果在模态窗口中，更新预览
-            if (modal) {
-                this.updateModalPreview(modal, compressedData);
-                this.updateModalActions(modal, true);
+            try {
+                debugLog('开始保存到本地存储');
+                // 保存到本地存储
+                StorageManager.set(this.storageKey, compressedData);
+                debugLog('存储成功');
+                
+                // 更新界面
+                this.addCustomOption();
+                debugLog('添加自定义选项完成');
+                
+                // 如果在模态窗口中，更新预览
+                if (modal) {
+                    this.updateModalPreview(modal, compressedData);
+                    this.updateModalActions(modal, true);
+                    debugLog('模态窗口更新完成');
+                }
+                
+                // 更新角色显示
+                if (window.app) {
+                    window.app.updateCharacterDisplay();
+                    debugLog('角色显示更新完成');
+                }
+                
+                debugLog('头像上传流程全部完成');
+                alert('头像上传成功！');
+            } catch (storageError) {
+                debugLog('头像保存失败', storageError);
+                console.error('头像保存失败:', storageError);
+                alert('头像保存失败：' + storageError.message);
             }
-            
-            // 更新角色显示
-            if (window.app) {
-                window.app.updateCharacterDisplay();
-            }
-            
-            alert('头像上传成功！');
         };
+        
+        img.onerror = () => {
+            debugLog('图片加载失败');
+            alert('图片加载失败，请检查图片是否有效');
+        };
+        
         img.src = imageData;
     }
 
@@ -1159,7 +1256,33 @@ class FocusReadingApp {
 
 // 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new FocusReadingApp();
+    debugLog('开始初始化应用');
+    
+    // 检查环境支持
+    const checks = {
+        localStorage: typeof localStorage !== 'undefined',
+        FileReader: typeof FileReader !== 'undefined',
+        Canvas: typeof document.createElement('canvas').getContext === 'function',
+        URL: typeof URL !== 'undefined'
+    };
+    
+    debugLog('环境检查结果', checks);
+    
+    // 检查是否有不支持的功能
+    const unsupported = Object.entries(checks).filter(([key, supported]) => !supported);
+    if (unsupported.length > 0) {
+        debugLog('发现不支持的功能', unsupported);
+        console.warn('部分功能可能不可用:', unsupported.map(([key]) => key));
+    }
+    
+    try {
+        window.app = new FocusReadingApp();
+        debugLog('应用初始化成功');
+    } catch (error) {
+        debugLog('应用初始化失败', error);
+        console.error('应用初始化失败:', error);
+        alert('应用初始化失败，请刷新页面重试');
+    }
 });
 
 // 防止页面刷新时丢失专注模式状态
